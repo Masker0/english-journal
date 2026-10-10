@@ -53,6 +53,10 @@ button { cursor: pointer; }
 .lock-card .check { flex-direction: row; align-items: center; gap: 8px; font-weight: 500; }
 .lock-card .who { font-size: 14px; color: var(--muted); }
 .err { color: var(--red-pen); font-size: 14px; }
+.ok { color: var(--green); font-size: 14px; }
+.err:empty, .ok:empty { display: none; }
+.pw-row { display: flex; gap: 8px; align-items: stretch; }
+.pw-row input { flex: 1; min-width: 0; }
 .setup code { font-family: var(--font-num); font-size: 13px; background: var(--paper); padding: 1px 5px; border-radius: 4px; overflow-wrap: anywhere; }
 
 /* Header + stats */
@@ -194,14 +198,36 @@ details.entry > summary::-webkit-details-marker { display: none; }
     <h1>English Journal</h1>
     <p class="who" id="who" hidden></p>
     <label id="email-wrap">Email
-      <input class="field" id="email" type="email" autocomplete="username" required>
+      <input class="field" id="email" type="email" inputmode="email" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" required>
     </label>
-    <label>Password
-      <input class="field" id="password" type="password" autocomplete="current-password" required>
-    </label>
+    <label for="password">Password</label>
+    <div class="pw-row">
+      <input class="field" id="password" type="password" autocomplete="current-password" autocapitalize="none" autocorrect="off" spellcheck="false" required>
+      <button type="button" class="btn small" data-toggle-pw="password">Show</button>
+    </div>
     <label class="check"><input type="checkbox" id="remember" checked> Keep me signed in on this device</label>
     <button class="btn primary" type="submit" id="login-btn">Open my journal</button>
     <p class="err" id="login-err" role="alert"></p>
+    <p class="ok" id="login-ok" role="status"></p>
+    <div><button type="button" class="link-btn" id="forgot">Forgot password?</button></div>
+  </form>
+</div>
+
+<!-- Set a new password (after opening the reset link from the email) -->
+<div class="lock" id="reset" hidden>
+  <form class="lock-card" id="reset-form" autocomplete="on">
+    <p class="eyebrow">New password</p>
+    <h1>English Journal</h1>
+    <p class="who">Choose a new password. Use at least 8 characters.</p>
+    <label for="new-pw">New password</label>
+    <div class="pw-row">
+      <input class="field" id="new-pw" type="password" autocomplete="new-password" autocapitalize="none" autocorrect="off" spellcheck="false" minlength="8" required>
+      <button type="button" class="btn small" data-toggle-pw="new-pw">Show</button>
+    </div>
+    <label for="new-pw2">Type it again</label>
+    <input class="field" id="new-pw2" type="password" autocomplete="new-password" autocapitalize="none" autocorrect="off" spellcheck="false" minlength="8" required>
+    <button class="btn primary" type="submit" id="reset-btn">Save new password</button>
+    <p class="err" id="reset-err" role="alert"></p>
   </form>
 </div>
 
@@ -380,7 +406,7 @@ const state = {
 };
 
 /* ---------- Screens ---------- */
-function show(id) { ["setup", "login", "app"].forEach((x) => { $("#" + x).hidden = x !== id; }); }
+function show(id) { ["setup", "login", "reset", "app"].forEach((x) => { $("#" + x).hidden = x !== id; }); }
 function showLogin() {
   state.uid = null; state.entries = []; state.phrases = []; state.urls = {};
   const email = ls.get("ej.email", "");
@@ -389,19 +415,54 @@ function showLogin() {
   $("#email-wrap").hidden = !!email;
   $("#who").innerHTML = email ? `Signed in as <b>${esc(email)}</b> · <button type="button" class="link-btn" id="not-me">Use another email</button>` : "";
   $("#remember").checked = keepSignedIn();
-  $("#password").value = ""; $("#login-err").textContent = "";
+  $("#password").value = ""; $("#login-err").textContent = ""; $("#login-ok").textContent = "";
   show("login");
   setTimeout(() => $(email ? "#password" : "#email").focus(), 50);
 }
 $("#login").addEventListener("click", (ev) => {
   if (ev.target.id === "not-me") { ls.del("ej.email"); showLogin(); }
 });
+document.querySelectorAll("[data-toggle-pw]").forEach((b) => b.addEventListener("click", () => {
+  const inp = document.getElementById(b.dataset.togglePw);
+  const hide = inp.type === "text";
+  inp.type = hide ? "password" : "text";
+  b.textContent = hide ? "Show" : "Hide";
+}));
+const thisPage = () => location.origin + location.pathname;
+$("#forgot").addEventListener("click", async () => {
+  const err = $("#login-err"), ok = $("#login-ok");
+  err.textContent = ""; ok.textContent = "";
+  const email = $("#email").value.trim().toLowerCase();
+  if (!email) { $("#email-wrap").hidden = false; $("#email").focus(); err.textContent = "Type your email first, then tap “Forgot password?” again."; return; }
+  const btn = $("#forgot"); btn.disabled = true;
+  const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: thisPage() });
+  btn.disabled = false;
+  if (error) {
+    err.textContent = /rate|too many|seconds/i.test(error.message) ? "Too many reset emails were sent. Wait a while, then try again." : "Couldn't send the reset email: " + error.message;
+    return;
+  }
+  ok.textContent = `A reset link was sent to ${email}. Open the email and tap the link. Check your spam folder too.`;
+});
+$("#reset-form").addEventListener("submit", async (ev) => {
+  ev.preventDefault();
+  const a = $("#new-pw").value, b = $("#new-pw2").value, err = $("#reset-err"), btn = $("#reset-btn");
+  err.textContent = "";
+  if (a.length < 8) { err.textContent = "Use at least 8 characters."; return; }
+  if (a !== b) { err.textContent = "The two passwords are different. Type them again."; return; }
+  btn.disabled = true; btn.textContent = "Saving…";
+  const { data, error } = await sb.auth.updateUser({ password: a });
+  btn.disabled = false; btn.textContent = "Save new password";
+  if (error) { err.textContent = /session|expired|missing/i.test(error.message) ? "This reset link has expired. Go back and tap “Forgot password?” again." : error.message; return; }
+  history.replaceState(null, "", thisPage());
+  if (data.user && data.user.email) ls.set("ej.email", data.user.email);
+  start(data.user);
+});
 $("#login-form").addEventListener("submit", async (ev) => {
   ev.preventDefault();
   const btn = $("#login-btn"), err = $("#login-err");
   ls.set("ej.remember", $("#remember").checked);
   btn.disabled = true; btn.textContent = "Opening…"; err.textContent = "";
-  const email = $("#email").value.trim();
+  const email = $("#email").value.trim().toLowerCase();
   const { data, error } = await sb.auth.signInWithPassword({ email, password: $("#password").value });
   btn.disabled = false; btn.textContent = "Open my journal";
   if (error) {
@@ -887,9 +948,23 @@ document.addEventListener("visibilitychange", async () => {
 (async () => {
   if (!configured) { show("setup"); return; }
   if (!sb) { show("setup"); $("#setup .lock-card p:last-child").textContent = "Couldn't load the sign-in system. Check your internet connection and reload the page."; return; }
+  const urlInfo = location.hash + location.search;
+  const recovering = /type=recovery/.test(urlInfo);
+  const linkError = /error_code=|error=/.test(urlInfo);
+  sb.auth.onAuthStateChange((event) => {
+    if (event === "PASSWORD_RECOVERY") show("reset");
+    if (event === "SIGNED_OUT" && state.uid) showLogin();
+  });
   const { data } = await sb.auth.getSession();
-  if (data && data.session) start(data.session.user); else showLogin();
-  sb.auth.onAuthStateChange((event) => { if (event === "SIGNED_OUT" && state.uid) showLogin(); });
+  if (data && data.session && recovering) show("reset");
+  else if (data && data.session) start(data.session.user);
+  else {
+    showLogin();
+    if (linkError) {
+      history.replaceState(null, "", thisPage());
+      $("#login-err").textContent = "That reset link has expired or was already used. Tap “Forgot password?” to get a new one.";
+    }
+  }
 })();
 </script>
 </body>
