@@ -1,0 +1,896 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>English Journal</title>
+<meta name="theme-color" content="#2c5bc4">
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400&family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Layout: a notebook page. Stats strip on top, writing desk + phrase bank side by side, history below. */
+:root {
+  --paper: #f3f5f9; --card: #ffffff; --ink: #1b2232; --muted: #5b6579; --line: #dfe3eb;
+  --rule: #cfdbee; --margin: #e27b80; --accent: #2c5bc4; --accent-soft: #e5ecfb;
+  --red-pen: #c4313b; --red-soft: #fbe6e7; --green: #1d8656; --green-soft: #e2f4ea;
+  --amber: #a86400; --amber-soft: #fbefdc;
+  --font-text: "Literata", Georgia, "Times New Roman", serif;
+  --font-ui: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-num: "JetBrains Mono", ui-monospace, Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #11141b; --card: #191e28; --ink: #e5e9f0; --muted: #98a2b6; --line: #2a313f;
+    --rule: #263247; --margin: #8f4248; --accent: #86a8f5; --accent-soft: #1f2b45;
+    --red-pen: #f07c84; --red-soft: #3a1f24; --green: #62cb98; --green-soft: #17322a;
+    --amber: #f0b45c; --amber-soft: #3a2c16; color-scheme: dark;
+  }
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--paper); color: var(--ink); font-family: var(--font-ui); font-size: 15px; line-height: 1.5;
+  padding: env(safe-area-inset-top, 0px) 0 env(safe-area-inset-bottom, 0px); }
+[hidden] { display: none !important; }
+img { max-width: 100%; }
+.wrap { max-width: 1120px; margin: 0 auto; padding-inline: 16px; padding-block: 24px 56px; display: flex; flex-direction: column; gap: 26px; }
+h1, h2 { margin: 0; text-wrap: balance; }
+h1 { font-family: var(--font-text); font-weight: 600; font-size: 32px; letter-spacing: -0.01em; }
+h2 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); font-weight: 700; }
+p { margin: 0; }
+button, input, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.eyebrow { font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--red-pen); font-weight: 700; }
+.field { width: 100%; border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; background: var(--card); font-size: 16px; }
+
+/* Lock screen */
+.lock { min-height: 100vh; display: grid; place-items: center; padding: 24px 16px; }
+.lock-card { width: min(380px, 100%); background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 28px 24px; display: flex; flex-direction: column; gap: 14px; }
+.lock-card label { font-size: 13px; font-weight: 600; color: var(--muted); display: flex; flex-direction: column; gap: 6px; }
+.lock-card .check { flex-direction: row; align-items: center; gap: 8px; font-weight: 500; }
+.lock-card .who { font-size: 14px; color: var(--muted); }
+.err { color: var(--red-pen); font-size: 14px; }
+.setup code { font-family: var(--font-num); font-size: 13px; background: var(--paper); padding: 1px 5px; border-radius: 4px; overflow-wrap: anywhere; }
+
+/* Header + stats */
+.top { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 18px; }
+.top-left { display: flex; flex-direction: column; gap: 2px; }
+.stats { display: grid; grid-template-columns: repeat(4, minmax(90px, 1fr)); gap: 10px; }
+.stat { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; min-width: 0; }
+.stat b { display: block; font-family: var(--font-num); font-size: 22px; font-variant-numeric: tabular-nums; }
+.stat span { font-size: 12px; color: var(--muted); }
+.heat-row { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; }
+.heat { display: grid; grid-template-columns: repeat(35, 1fr); gap: 3px; flex: 1 1 300px; min-width: 0; }
+.heat i { aspect-ratio: 1; border-radius: 3px; background: var(--line); }
+.heat i[data-l="1"] { background: color-mix(in srgb, var(--accent) 40%, var(--line)); }
+.heat i[data-l="2"] { background: color-mix(in srgb, var(--accent) 70%, var(--line)); }
+.heat i[data-l="3"] { background: var(--accent); }
+.heat i.today { outline: 2px solid var(--red-pen); outline-offset: 1px; }
+.heat-label { font-size: 12px; color: var(--muted); }
+.banner { background: var(--red-soft); color: var(--red-pen); border-radius: 10px; padding: 10px 14px; font-size: 14px; }
+
+/* Main grid */
+.grid { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 24px; align-items: start; }
+@media (max-width: 860px) { .grid { grid-template-columns: 1fr; } .stats { grid-template-columns: repeat(2, 1fr); width: 100%; } }
+.panel { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 18px; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+
+/* Writing desk */
+.prompt { font-family: var(--font-text); font-size: 18px; line-height: 1.45; }
+.prompt-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); }
+.link-btn { background: none; border: 0; padding: 0; color: var(--accent); font-weight: 600; font-size: 13px; }
+.target { display: inline-flex; align-items: center; gap: 6px; background: var(--amber-soft); color: var(--amber); border-radius: 999px; padding: 4px 6px 4px 12px; font-size: 13px; font-weight: 600; max-width: 100%; }
+.target button { border: 0; background: transparent; color: inherit; font-size: 16px; line-height: 1; padding: 0 6px; }
+.title-in { width: 100%; border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; background: var(--card); font-family: var(--font-text); font-size: 17px; font-weight: 600; }
+.title-in::placeholder { font-weight: 400; font-style: italic; color: var(--muted); }
+.notebook {
+  width: 100%; min-height: 192px; resize: vertical; border: 1px solid var(--line); border-radius: 10px;
+  font-family: var(--font-text); font-size: 18px; line-height: 32px; padding: 8px 14px 8px 56px;
+  background-color: var(--card);
+  background-image:
+    linear-gradient(to right, transparent 42px, var(--margin) 42px, var(--margin) 44px, transparent 44px),
+    repeating-linear-gradient(to bottom, transparent 0, transparent 31px, var(--rule) 31px, var(--rule) 32px);
+  background-attachment: local; background-position: 0 8px;
+}
+.notebook::placeholder { color: var(--muted); font-style: italic; }
+.plain-area { width: 100%; min-height: 120px; resize: vertical; border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; background: var(--card); font-size: 15px; }
+.actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.btn { border-radius: 8px; padding: 9px 16px; font-weight: 600; border: 1px solid var(--line); background: var(--card); }
+.btn:hover { border-color: var(--accent); }
+.btn.primary { background: var(--accent); color: var(--card); border-color: var(--accent); }
+.btn:disabled { opacity: 0.55; cursor: default; }
+.btn.small { padding: 6px 11px; font-size: 13px; }
+.btn.rec { color: var(--red-pen); }
+.btn.rec.on { background: var(--red-pen); color: var(--card); border-color: var(--red-pen); }
+.status { font-size: 13px; color: var(--muted); }
+.status.bad { color: var(--red-pen); }
+.count { margin-left: auto; font-size: 12px; color: var(--muted); font-family: var(--font-num); }
+.attach-bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.hint { font-size: 12px; color: var(--muted); }
+.speak { border: 1px solid var(--line); background: var(--card); border-radius: 999px; font-size: 12px; padding: 1px 9px; color: var(--accent); font-weight: 600; }
+
+/* Media */
+.media { display: flex; flex-direction: column; gap: 10px; }
+.media:empty { display: none; }
+.mitem { border: 1px solid var(--line); border-radius: 10px; padding: 10px; display: flex; flex-direction: column; gap: 8px; min-width: 0; background: var(--paper); }
+.mhead { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); min-width: 0; }
+.mname { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; flex: 1; }
+.mitem audio { width: 100%; }
+.mitem video { width: 100%; max-height: 420px; border-radius: 8px; background: #000; }
+.mitem img { width: 100%; max-height: 420px; object-fit: contain; border-radius: 8px; }
+.mitem.pending { border-style: dashed; }
+.kind { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; border-radius: 999px; padding: 1px 8px; background: var(--accent-soft); color: var(--accent); }
+
+/* Phrase bank */
+.potd { background: var(--accent-soft); border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 6px; }
+.potd .p { font-family: var(--font-text); font-size: 19px; font-weight: 600; }
+.potd .m { font-size: 13px; color: var(--muted); }
+.add { display: grid; gap: 8px; }
+.filters { display: flex; gap: 6px; flex-wrap: wrap; }
+.filter { border: 1px solid var(--line); background: var(--card); border-radius: 999px; padding: 3px 10px; font-size: 12px; font-weight: 600; color: var(--muted); }
+.filter[aria-pressed="true"] { background: var(--ink); color: var(--card); border-color: var(--ink); }
+.plist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; max-height: 560px; overflow-y: auto; }
+.plist li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 10px; padding: 10px 2px; border-bottom: 1px solid var(--line); }
+.plist li:last-child { border-bottom: 0; }
+.ph { font-family: var(--font-text); font-weight: 600; overflow-wrap: anywhere; }
+.mean { grid-column: 1 / -1; font-size: 13px; color: var(--muted); }
+.meta { grid-column: 1 / -1; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.dots { font-family: var(--font-num); letter-spacing: 2px; font-size: 12px; color: var(--accent); }
+.pill { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; border-radius: 999px; padding: 1px 8px; }
+.pill.new { background: var(--line); color: var(--muted); }
+.pill.prac { background: var(--amber-soft); color: var(--amber); }
+.pill.done { background: var(--green-soft); color: var(--green); }
+.row-actions { display: flex; gap: 6px; margin-left: auto; }
+.ghost { border: 0; background: none; font-size: 13px; font-weight: 600; color: var(--muted); padding: 2px 4px; }
+.ghost:hover { color: var(--accent); }
+.ghost.danger { color: var(--red-pen); }
+
+/* History */
+.hist { display: flex; flex-direction: column; gap: 14px; }
+.hist-head { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; }
+.hist-head input { width: min(280px, 100%); }
+.hlist { display: flex; flex-direction: column; gap: 10px; }
+details.entry { background: var(--card); border: 1px solid var(--line); border-radius: 12px; }
+details.entry > summary { list-style: none; cursor: pointer; padding: 14px 16px; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 14px; align-items: baseline; }
+details.entry > summary::-webkit-details-marker { display: none; }
+.edate { font-family: var(--font-num); font-size: 12px; color: var(--muted); white-space: nowrap; }
+.etext { font-family: var(--font-text); font-size: 16px; overflow-wrap: anywhere; }
+.etitle { display: block; font-weight: 600; font-size: 17px; }
+.mcount { font-size: 12px; color: var(--muted); margin-left: 6px; font-family: var(--font-ui); }
+.tag { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; border-radius: 999px; padding: 2px 8px; background: var(--line); color: var(--muted); white-space: nowrap; }
+.tag.fb { background: var(--green-soft); color: var(--green); }
+.ebody { padding: 0 16px 16px; display: flex; flex-direction: column; gap: 12px; }
+.fulltext { font-family: var(--font-text); font-size: 17px; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; }
+.feedback { border-left: 3px solid var(--green); background: var(--green-soft); border-radius: 0 10px 10px 0; padding: 10px 14px; white-space: pre-wrap; overflow-wrap: anywhere; font-size: 15px; }
+.feedback-label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--green); display: block; margin-bottom: 4px; }
+.edit-box { display: flex; flex-direction: column; gap: 10px; }
+.edit-box label { font-size: 13px; font-weight: 600; color: var(--muted); }
+.empty { border: 1px dashed var(--line); border-radius: 12px; padding: 22px; color: var(--muted); text-align: center; }
+.foot { font-size: 12px; color: var(--muted); }
+@media (max-width: 520px) {
+  details.entry > summary { grid-template-columns: minmax(0, 1fr) auto; }
+  .edate { grid-column: 1 / -1; }
+  h1 { font-size: 27px; }
+}
+</style>
+</head>
+<body>
+
+<!-- Shown until the site is connected to Supabase -->
+<div class="lock" id="setup" hidden>
+  <div class="lock-card setup">
+    <p class="eyebrow">Almost ready</p>
+    <h1>English Journal</h1>
+    <p>This site isn't connected to its database yet. Open <code>index.html</code>, find <code>SUPABASE_URL</code> and <code>SUPABASE_KEY</code> near the bottom, and paste in the two values from Supabase → Project Settings → API.</p>
+  </div>
+</div>
+
+<!-- Password screen -->
+<div class="lock" id="login" hidden>
+  <form class="lock-card" id="login-form" autocomplete="on">
+    <p class="eyebrow">Private</p>
+    <h1>English Journal</h1>
+    <p class="who" id="who" hidden></p>
+    <label id="email-wrap">Email
+      <input class="field" id="email" type="email" autocomplete="username" required>
+    </label>
+    <label>Password
+      <input class="field" id="password" type="password" autocomplete="current-password" required>
+    </label>
+    <label class="check"><input type="checkbox" id="remember" checked> Keep me signed in on this device</label>
+    <button class="btn primary" type="submit" id="login-btn">Open my journal</button>
+    <p class="err" id="login-err" role="alert"></p>
+  </form>
+</div>
+
+<!-- The journal -->
+<div class="wrap" id="app" hidden>
+  <header class="top">
+    <div class="top-left">
+      <p class="eyebrow">American English · daily writing</p>
+      <h1>English Journal</h1>
+      <div><button class="link-btn" id="logout" type="button">Lock / sign out</button></div>
+    </div>
+    <div class="stats" aria-label="Your progress">
+      <div class="stat"><b id="s-streak">0</b><span>day streak</span></div>
+      <div class="stat"><b id="s-total">0</b><span>entries</span></div>
+      <div class="stat"><b id="s-media">0</b><span>recordings</span></div>
+      <div class="stat"><b id="s-mastered">0</b><span>phrases mastered</span></div>
+    </div>
+  </header>
+
+  <p class="banner" id="banner" hidden></p>
+
+  <div class="heat-row">
+    <div class="heat" id="heat" aria-label="Last 35 days of writing"></div>
+    <span class="heat-label">Last 5 weeks</span>
+  </div>
+
+  <main class="grid">
+    <section class="panel" aria-labelledby="write-h">
+      <h2 id="write-h">Today's writing</h2>
+      <p class="prompt" id="prompt"></p>
+      <div class="prompt-meta">
+        <span id="prompt-num"></span>
+        <button class="link-btn" id="next-prompt" type="button">Different prompt</button>
+      </div>
+      <div id="target-wrap" hidden>
+        <span class="target">Practice phrase: <span id="target-text"></span><button type="button" id="clear-target" aria-label="Remove practice phrase">×</button></span>
+      </div>
+      <label for="draft" class="status">Write anything: sentences, notes, a story, new words. Record your voice to practice pronunciation.</label>
+      <input id="draft-title" class="title-in" placeholder="Title (optional)" autocomplete="off">
+      <textarea id="draft" class="notebook" placeholder="Start writing here…"></textarea>
+      <div class="attach-bar">
+        <button class="btn small rec" type="button" data-rec="draft">● Record voice</button>
+        <button class="btn small" type="button" data-pick="audio" data-for="draft">+ Audio file</button>
+        <button class="btn small" type="button" data-pick="video" data-for="draft">+ Video</button>
+        <button class="btn small" type="button" data-pick="image" data-for="draft">+ Photo</button>
+      </div>
+      <div class="media" id="draft-media"></div>
+      <div class="actions">
+        <button class="btn primary" id="save" type="button">Save</button>
+        <button class="btn" id="save-ask" type="button">Save &amp; ask Claude to correct</button>
+        <span class="count" id="wc">0 words</span>
+      </div>
+      <p class="status" id="status" role="status"></p>
+    </section>
+
+    <aside class="panel" aria-labelledby="bank-h">
+      <h2 id="bank-h">Phrase bank</h2>
+      <div class="potd" id="potd" hidden>
+        <span class="eyebrow" style="color:var(--accent)">Phrase to practice today</span>
+        <span class="p" id="potd-p"></span>
+        <span class="m" id="potd-m"></span>
+        <div><button class="btn small" type="button" id="potd-use">Use it in today's writing</button></div>
+      </div>
+      <form class="add" id="add-form" autocomplete="off">
+        <input class="field" id="add-phrase" placeholder="New phrase, e.g. “to be fair”" required>
+        <input class="field" id="add-meaning" placeholder="Meaning or example (optional)">
+        <button class="btn small" type="submit">Add phrase</button>
+      </form>
+      <div class="filters" role="group" aria-label="Filter phrases">
+        <button class="filter" type="button" data-filter="all" aria-pressed="true">All</button>
+        <button class="filter" type="button" data-filter="new" aria-pressed="false">New</button>
+        <button class="filter" type="button" data-filter="prac" aria-pressed="false">Practicing</button>
+        <button class="filter" type="button" data-filter="done" aria-pressed="false">Mastered</button>
+      </div>
+      <p class="foot">A phrase is mastered after you use it in 5 entries.</p>
+      <ul class="plist" id="plist"></ul>
+    </aside>
+  </main>
+
+  <section class="hist" aria-labelledby="hist-h">
+    <div class="hist-head">
+      <h2 id="hist-h">History</h2>
+      <input class="field" id="search" type="search" placeholder="Search your journal">
+    </div>
+    <div class="hlist" id="hlist"></div>
+    <div><button class="btn small" id="more" type="button" hidden>Show more</button></div>
+  </section>
+
+  <p class="foot">Your notes and recordings are private: only you can open them after entering your password.</p>
+</div>
+<input type="file" id="picker" hidden>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+/* ===== Your Supabase project (Project Settings → API) ===== */
+const SUPABASE_URL = "https://eezjqjqckmyepjlwdpup.supabase.co";
+const SUPABASE_KEY = "sb_publishable_N41Vum4LgioxY1pLbDZbNg_1AxQ51tc";
+/* ========================================================== */
+
+const PROMPTS = [
+  "Describe your morning routine. Use at least one phrasal verb (wake up, get ready, head out…).",
+  "What is one habit you want to build this year, and why? Start with “My take is…” or “The way I see it…”.",
+  "Give your opinion on working from home. Then add the other side with “That said…”.",
+  "Tell a short story about a time you felt shy. What would you do differently now?",
+  "Explain how to make your favorite dish to an American friend.",
+  "What is the bottom line of a book, video, or podcast you enjoyed recently?",
+  "Describe your city to someone who has never visited. What should they not miss?",
+  "Argue for or against this: “Social media does more harm than good.”",
+  "What did you figure out this week that you didn't understand before?",
+  "Write a short, polite email asking your manager for a day off.",
+  "Compare life in the US with life in your home country. Use “whereas” or “on the other hand”.",
+  "What is a common misconception about your country or culture? Push back on it.",
+  "Describe a goal you have for the next five years and the steps to get there.",
+  "Summarize today's news story in three sentences, like a news anchor.",
+  "If you could master one skill overnight, what would it be and why?",
+  "Describe a problem at work or school and how you came up with a solution.",
+  "Write small talk you could use with a neighbor or coworker on a Monday morning.",
+  "What does success mean to you? Use one academic word: inherent, nuanced, or pivotal.",
+  "Give advice to someone moving to the US for the first time.",
+  "Describe a person who influenced you. What did they do that made a difference?",
+  "Explain a hobby you have to someone who knows nothing about it.",
+  "What is something that's a no-brainer for you but hard for other people?",
+  "Write about a decision you regret or are proud of. What did you learn from it?",
+  "Describe your perfect weekend in detail, using the future tense (I'd, I'm going to…).",
+  "Persuade a friend to start learning a new language. Use “It boils down to…”.",
+  "What would you change about your school or workplace if you were in charge?",
+  "Describe the last time you were really surprised.",
+  "Write three sentences you would say in a job interview about your strengths.",
+  "What's a trend you've noticed lately? What are its implications?",
+  "Reflect on your English progress this month. What is easier now, and what still needs work?"
+];
+const DEFAULT_PHRASES = [
+  ["My take is…", "My opinion is… (casual, confident)"],
+  ["That said", "However / but — used to add the other side"],
+  ["To be fair", "Introduces a fair point for the other side"],
+  ["It boils down to", "The most important point is…"],
+  ["The bottom line is", "The main conclusion is…"],
+  ["I'd push back on that", "Polite way to say “I disagree”"],
+  ["figure out", "understand or solve something"],
+  ["wrap my head around", "fully understand something difficult"],
+  ["come up with", "think of an idea or plan"],
+  ["a no-brainer", "a very easy or obvious decision"],
+  ["pivotal", "extremely important; a turning point"],
+  ["nuanced", "with subtle details; not black-and-white"],
+  ["busy as a bee", "very busy"]
+];
+const MAX_BYTES = 50 * 1024 * 1024;
+
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const dayKey = (d) => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+const norm = (s) => String(s || "").toLowerCase().replace(/[’‘]/g, "'").replace(/[…\.!?,;:"“”()]+/g, " ").replace(/\s+/g, " ").trim();
+const fmtSize = (n) => (n >= 1048576 ? (n / 1048576).toFixed(1) + " MB" : Math.max(1, Math.round(n / 1024)) + " KB");
+const ls = {
+  get(k, fb) { try { const v = localStorage.getItem(k); return v == null ? fb : JSON.parse(v); } catch { return fb; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
+  del(k) { try { localStorage.removeItem(k); } catch {} }
+};
+
+/* ---------- Supabase client; "keep me signed in" picks local vs session storage ---------- */
+const keepSignedIn = () => ls.get("ej.remember", true) !== false;
+const authStorage = {
+  getItem(k) { try { return localStorage.getItem(k) ?? sessionStorage.getItem(k); } catch { return null; } },
+  setItem(k, v) { try { (keepSignedIn() ? localStorage : sessionStorage).setItem(k, v); } catch {} },
+  removeItem(k) { try { localStorage.removeItem(k); sessionStorage.removeItem(k); } catch {} }
+};
+const configured = /^https:\/\/.+/.test(SUPABASE_URL) && SUPABASE_KEY.length > 20 && !SUPABASE_KEY.startsWith("PASTE");
+const sb = configured && window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+  auth: { storage: authStorage, persistSession: true, autoRefreshToken: true }
+}) : null;
+
+const state = {
+  uid: null, entries: [], phrases: [], urls: {}, target: ls.get("ej.target", ""),
+  promptOffset: 0, filter: "all", query: "", shown: 20, busy: false,
+  draftMedia: [], pending: [], editing: null, open: new Set(), confirmDel: null, pickFor: null, rec: null
+};
+
+/* ---------- Screens ---------- */
+function show(id) { ["setup", "login", "app"].forEach((x) => { $("#" + x).hidden = x !== id; }); }
+function showLogin() {
+  state.uid = null; state.entries = []; state.phrases = []; state.urls = {};
+  const email = ls.get("ej.email", "");
+  $("#email").value = email;
+  $("#who").hidden = !email;
+  $("#email-wrap").hidden = !!email;
+  $("#who").innerHTML = email ? `Signed in as <b>${esc(email)}</b> · <button type="button" class="link-btn" id="not-me">Use another email</button>` : "";
+  $("#remember").checked = keepSignedIn();
+  $("#password").value = ""; $("#login-err").textContent = "";
+  show("login");
+  setTimeout(() => $(email ? "#password" : "#email").focus(), 50);
+}
+$("#login").addEventListener("click", (ev) => {
+  if (ev.target.id === "not-me") { ls.del("ej.email"); showLogin(); }
+});
+$("#login-form").addEventListener("submit", async (ev) => {
+  ev.preventDefault();
+  const btn = $("#login-btn"), err = $("#login-err");
+  ls.set("ej.remember", $("#remember").checked);
+  btn.disabled = true; btn.textContent = "Opening…"; err.textContent = "";
+  const email = $("#email").value.trim();
+  const { data, error } = await sb.auth.signInWithPassword({ email, password: $("#password").value });
+  btn.disabled = false; btn.textContent = "Open my journal";
+  if (error) {
+    err.textContent = /invalid/i.test(error.message) ? "Wrong email or password. Try again."
+      : /fetch|network/i.test(error.message) ? "No internet connection. Check it and try again."
+      : error.message;
+    return;
+  }
+  ls.set("ej.email", email);
+  start(data.user);
+});
+$("#logout").addEventListener("click", async () => {
+  if (state.rec) stopRecording(true);
+  await sb.auth.signOut().catch(() => {});
+  showLogin();
+});
+
+/* ---------- Data ---------- */
+function banner(msg) { $("#banner").textContent = msg || ""; $("#banner").hidden = !msg; }
+async function start(user) {
+  state.uid = user.id;
+  show("app");
+  restoreDraft(); updateWordCount(); setTarget(state.target); renderPrompt();
+  $("#hlist").innerHTML = '<div class="empty">Loading your journal…</div>';
+  const [e, p] = await Promise.all([
+    sb.from("entries").select("*").order("created_at", { ascending: false }).limit(2000),
+    sb.from("phrases").select("*").order("created_at", { ascending: true }).limit(2000)
+  ]);
+  if (e.error || p.error) { banner("Couldn't load your journal. Check your internet connection, then reload the page."); return; }
+  banner("");
+  state.entries = e.data; state.phrases = p.data;
+  if (!state.entries.length && !state.phrases.length) {
+    const t = Date.now();
+    const rows = DEFAULT_PHRASES.map(([phrase, meaning], i) => ({ phrase, meaning, created_at: new Date(t + i).toISOString() }));
+    const r = await sb.from("phrases").insert(rows).select();
+    if (!r.error) state.phrases = r.data;
+  }
+  await refreshUrls();
+  renderAll();
+}
+async function refreshUrls() {
+  const now = Date.now();
+  const paths = [];
+  state.entries.forEach((e) => (e.media || []).forEach((m) => paths.push(m.path)));
+  state.draftMedia.forEach((m) => paths.push(m.path));
+  const need = [...new Set(paths)].filter((p) => !state.urls[p] || state.urls[p].exp < now + 60000);
+  if (!need.length) return;
+  const { data } = await sb.storage.from("media").createSignedUrls(need, 6 * 3600);
+  (data || []).forEach((d) => { if (d.signedUrl) state.urls[d.path] = { url: d.signedUrl, exp: now + 6 * 3600 * 1000 }; });
+}
+const urlOf = (path) => (state.urls[path] ? state.urls[path].url : "");
+async function addEntry(row) {
+  const { data, error } = await sb.from("entries").insert(row).select().single();
+  if (error) throw error;
+  state.entries.unshift(data);
+  return data;
+}
+async function updateEntry(id, patch) {
+  const { data, error } = await sb.from("entries").update({ ...patch, updated_at: new Date().toISOString() }).eq("id", id).select().single();
+  if (error) throw error;
+  const i = state.entries.findIndex((x) => x.id === id);
+  if (i >= 0) state.entries[i] = data;
+  return data;
+}
+async function removeFiles(paths) {
+  if (paths.length) await sb.storage.from("media").remove(paths).catch(() => {});
+}
+
+/* ---------- Draft ---------- */
+function saveDraft() { ls.set("ej.draft", { title: $("#draft-title").value, body: $("#draft").value, media: state.draftMedia }); }
+function restoreDraft() {
+  const d = ls.get("ej.draft", null);
+  $("#draft").value = (d && d.body) || ""; $("#draft-title").value = (d && d.title) || "";
+  state.draftMedia = d && Array.isArray(d.media) ? d.media.filter((m) => m && m.path && m.path.startsWith(state.uid + "/")) : [];
+}
+function setTarget(p) {
+  state.target = p || ""; ls.set("ej.target", state.target);
+  $("#target-wrap").hidden = !state.target;
+  $("#target-text").textContent = state.target;
+}
+function updateWordCount() {
+  const n = $("#draft").value.trim().split(/\s+/).filter(Boolean).length;
+  $("#wc").textContent = n + (n === 1 ? " word" : " words");
+}
+function setStatus(msg, bad) { const s = $("#status"); s.textContent = msg; s.className = "status" + (bad ? " bad" : ""); }
+
+async function saveDraftEntry(ask) {
+  if (state.busy) return;
+  if (state.rec && state.rec.target === "draft") { setStatus("Stop the recording first, then save."); return; }
+  if (state.pending.some((p) => p.for === "draft" && !p.failed)) { setStatus("Wait for your file to finish uploading, then save."); return; }
+  const body = $("#draft").value.trim(), title = $("#draft-title").value.trim();
+  if (!body && !title && !state.draftMedia.length) { setStatus("Write something or add a recording first.", true); return; }
+  if (ask && !body) { setStatus("Write some text first so Claude has something to correct.", true); return; }
+  if (ask) openClaude(body, state.target);
+  state.busy = true; $("#save").disabled = $("#save-ask").disabled = true;
+  try {
+    const e = await addEntry({ title, body, target: state.target || "", media: state.draftMedia, day: dayKey(new Date()) });
+    $("#draft").value = ""; $("#draft-title").value = ""; state.draftMedia = []; saveDraft(); updateWordCount(); setTarget("");
+    state.open.add(e.id);
+    setStatus(ask ? "Saved. Claude is open in a new tab. When it answers, copy its corrections, open this entry in History, tap Edit and paste them into “Corrections & notes”." : "Saved.");
+  } catch {
+    setStatus("Couldn't save. Check your internet connection. Your text is still here, so try again.", true);
+  }
+  state.busy = false; $("#save").disabled = $("#save-ask").disabled = false;
+  renderAll();
+}
+
+/* ---------- Ask Claude ---------- */
+function coachPrompt(text, target) {
+  return `You are my American English writing coach. I'm an adult learner who studied in the US and I want to sound like an educated native speaker: natural, fluent, and using the advanced and academic phrases Americans really use.
+
+Here is what I wrote:
+"""
+${text}
+"""
+${target ? `I was practicing this phrase: "${target}". Tell me if I used it correctly.\n` : ""}
+Please reply in short sections:
+1. Corrected: my text with only the real mistakes fixed
+2. Natural: how an educated American would say it in conversation
+3. Advanced: a more sophisticated, academic version
+4. Mistakes: each mistake → the fix → one-line reason
+5. Phrases to learn: 2-3 useful phrases with meaning and an example
+6. Pronunciation: 1-3 words from my text that learners often say wrong, with a tip
+7. Score: how natural my original sounds, out of 10`;
+}
+function openClaude(text, target) {
+  const prompt = coachPrompt(text, target);
+  try { navigator.clipboard && navigator.clipboard.writeText(prompt).catch(() => {}); } catch {}
+  window.open("https://claude.ai/new?q=" + encodeURIComponent(prompt), "_blank", "noopener");
+}
+
+/* ---------- Files and recording ---------- */
+const chains = {};
+function queueFor(target, fn) {
+  const next = (chains[target] || Promise.resolve()).then(fn, fn);
+  chains[target] = next.catch(() => {});
+  return next;
+}
+function kindOf(file, hint) {
+  const t = (file.type || "").toLowerCase();
+  if (t.startsWith("image/")) return "image";
+  if (t.startsWith("video/")) return hint === "audio" ? "audio" : "video";
+  if (t.startsWith("audio/")) return "audio";
+  return hint || "audio";
+}
+async function uploadFile(file, target, hint) {
+  const p = { pid: "u" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), for: target, name: file.name || "recording", note: "Uploading " + fmtSize(file.size) + "…" };
+  state.pending.push(p); renderPending(target);
+  try {
+    if (file.size > MAX_BYTES) throw new Error("too_large");
+    const safe = (file.name || "recording").replace(/[^\w.\-]+/g, "_").slice(-80);
+    const path = `${state.uid}/${Date.now()}-${Math.random().toString(36).slice(2, 7)}-${safe}`;
+    const up = await sb.storage.from("media").upload(path, file, { contentType: file.type || "application/octet-stream", upsert: false });
+    if (up.error) throw up.error;
+    const m = { path, kind: kindOf(file, hint), name: file.name || "recording", size: file.size, type: file.type || "" };
+    if (target === "draft") { state.draftMedia.push(m); saveDraft(); }
+    else {
+      await queueFor(target, async () => {
+        const e = state.entries.find((x) => x.id === target);
+        if (!e) { await removeFiles([path]); throw new Error("gone"); }
+        await updateEntry(target, { media: [...(e.media || []), m] });
+      });
+    }
+    await refreshUrls();
+    state.pending = state.pending.filter((x) => x !== p);
+    renderAll();
+  } catch (err) {
+    const msg = String((err && err.message) || err);
+    p.failed = true;
+    p.note = msg === "too_large" ? `“${p.name}” is bigger than 50 MB. Record a shorter clip or at a lower quality.`
+      : msg === "gone" ? "That entry was deleted, so the file wasn't added."
+      : /exceed|size/i.test(msg) ? `“${p.name}” is too big for your storage plan.`
+      : "Upload failed. Check your internet connection and try again.";
+    renderPending(target);
+    setTimeout(() => { state.pending = state.pending.filter((x) => x !== p); renderPending(target); }, 9000);
+  }
+}
+function pickFiles(kind, target) {
+  const picker = $("#picker");
+  picker.accept = kind === "audio" ? "audio/*,.m4a,.mp3,.wav,.webm,.ogg,.aac,.amr,.3gp" : kind === "video" ? "video/*" : "image/*";
+  picker.multiple = true; picker.value = "";
+  state.pickFor = { kind, target };
+  picker.click();
+}
+$("#picker").addEventListener("change", (ev) => {
+  const pf = state.pickFor;
+  Array.from(ev.target.files || []).forEach((f) => uploadFile(f, pf.target, pf.kind));
+  ev.target.value = "";
+});
+
+async function startRecording(target) {
+  if (state.rec) return;
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.MediaRecorder) {
+    alertFor(target, "This browser can't record. Use “+ Audio file” to add a recording from your phone instead.");
+    return;
+  }
+  let stream;
+  try { stream = await navigator.mediaDevices.getUserMedia({ audio: true }); }
+  catch { alertFor(target, "Microphone access was blocked. Allow the microphone for this site in your browser settings, then try again."); return; }
+  const mime = ["audio/webm;codecs=opus", "audio/mp4", "audio/webm", "audio/ogg"].find((m) => { try { return MediaRecorder.isTypeSupported(m); } catch { return false; } }) || "";
+  const rec = new MediaRecorder(stream, mime ? { mimeType: mime } : undefined);
+  const chunks = [];
+  rec.ondataavailable = (e) => { if (e.data && e.data.size) chunks.push(e.data); };
+  rec.onstop = () => {
+    stream.getTracks().forEach((t) => t.stop());
+    const r = state.rec; state.rec = null; clearInterval(r && r.timer); updateRecButtons();
+    if (r && r.discard) return;
+    const type = (rec.mimeType || mime || "audio/webm").split(";")[0];
+    const ext = type.includes("mp4") ? "m4a" : type.includes("ogg") ? "ogg" : "webm";
+    const d = new Date();
+    const name = `recording-${dayKey(d)}-${String(d.getHours()).padStart(2, "0")}${String(d.getMinutes()).padStart(2, "0")}.${ext}`;
+    const file = new File(chunks, name, { type });
+    if (file.size) uploadFile(file, target, "audio");
+  };
+  rec.start(1000);
+  state.rec = { rec, target, t0: Date.now(), timer: setInterval(updateRecButtons, 500), discard: false };
+  updateRecButtons();
+}
+function stopRecording(discard) {
+  if (!state.rec) return;
+  state.rec.discard = !!discard;
+  try { state.rec.rec.stop(); } catch {}
+}
+function updateRecButtons() {
+  document.querySelectorAll("[data-rec]").forEach((b) => {
+    const on = state.rec && state.rec.target === b.dataset.rec;
+    b.classList.toggle("on", !!on);
+    if (on) {
+      const s = Math.floor((Date.now() - state.rec.t0) / 1000);
+      b.textContent = `■ Stop ${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+    } else b.textContent = "● Record voice";
+    b.disabled = !!state.rec && !on;
+  });
+}
+function alertFor(target, msg) { if (target === "draft") setStatus(msg, true); else { const p = { pid: "a" + Date.now(), for: target, name: "Recording", note: msg, failed: true }; state.pending.push(p); renderPending(target); setTimeout(() => { state.pending = state.pending.filter((x) => x !== p); renderPending(target); }, 9000); } }
+
+/* ---------- Derived ---------- */
+function usesOf(phrase) {
+  const n = norm(phrase);
+  if (!n) return 0;
+  return state.entries.reduce((c, e) => c + (norm(e.body).includes(n) ? 1 : 0), 0);
+}
+const levelOf = (u) => (u >= 5 ? "done" : u >= 1 ? "prac" : "new");
+function streak() {
+  const set = new Set(state.entries.map((e) => e.day));
+  const d = new Date();
+  if (!set.has(dayKey(d))) d.setDate(d.getDate() - 1);
+  let n = 0;
+  while (set.has(dayKey(d))) { n++; d.setDate(d.getDate() - 1); }
+  return n;
+}
+
+/* ---------- Speech (for shadowing) ---------- */
+const canSpeak = (() => { try { return "speechSynthesis" in window && typeof SpeechSynthesisUtterance === "function"; } catch { return false; } })();
+function speak(text) {
+  try {
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = "en-US"; u.rate = 0.92;
+    const voices = speechSynthesis.getVoices();
+    const v = voices.find((x) => x.lang === "en-US" && /natural|google|samantha|aria|jenny/i.test(x.name)) || voices.find((x) => x.lang === "en-US");
+    if (v) u.voice = v;
+    speechSynthesis.speak(u);
+  } catch {}
+}
+const speakBtn = (text, label) => (canSpeak && text ? `<button type="button" class="speak" data-speak="${esc(text)}">▶ ${label || "Listen"}</button>` : "");
+
+/* ---------- Render ---------- */
+function mediaHtml(m, removeAttr, confirming) {
+  const src = esc(urlOf(m.path));
+  const player = !src ? `<p class="status">Loading…</p>`
+    : m.kind === "image" ? `<img src="${src}" alt="${esc(m.name)}" loading="lazy">`
+    : m.kind === "video" ? `<video controls playsinline preload="metadata" src="${src}"></video>`
+    : `<audio controls preload="metadata" src="${src}"></audio>`;
+  const label = { audio: "Audio", video: "Video", image: "Photo" }[m.kind] || "File";
+  return `<div class="mitem"><div class="mhead"><span class="kind">${label}</span><span class="mname">${esc(m.name)}${m.size ? " · " + fmtSize(m.size) : ""}</span>${removeAttr ? `<button type="button" class="ghost danger" ${removeAttr}>${confirming ? "Confirm remove" : "Remove"}</button>` : ""}</div>${player}</div>`;
+}
+const pendingHtml = (target) => state.pending.filter((p) => p.for === target).map((p) =>
+  `<div class="mitem pending"><div class="mhead"><span class="kind">${p.failed ? "Problem" : "Adding"}</span><span class="mname">${esc(p.name)}</span></div><p class="status${p.failed ? " bad" : ""}">${esc(p.note)}</p></div>`).join("");
+let lastDraftHtml = null;
+function renderDraftMedia() {
+  const html = state.draftMedia.map((m) => mediaHtml(m, `data-rmdraft="${esc(m.path)}"`, false)).join("") + pendingHtml("draft");
+  if (html !== lastDraftHtml) { $("#draft-media").innerHTML = html; lastDraftHtml = html; }
+}
+function renderPending(target) { if (target === "draft") renderDraftMedia(); else renderHistory(); }
+
+function renderStats() {
+  $("#s-streak").textContent = streak();
+  $("#s-total").textContent = state.entries.length;
+  $("#s-media").textContent = state.entries.reduce((n, e) => n + (e.media || []).filter((m) => m.kind !== "image").length, 0);
+  $("#s-mastered").textContent = state.phrases.filter((p) => usesOf(p.phrase) >= 5).length + "/" + state.phrases.length;
+  const counts = {};
+  state.entries.forEach((e) => { counts[e.day] = (counts[e.day] || 0) + 1; });
+  const cells = [], today = new Date();
+  for (let i = 34; i >= 0; i--) {
+    const d = new Date(today); d.setDate(today.getDate() - i);
+    const k = dayKey(d), c = counts[k] || 0;
+    cells.push(`<i data-l="${Math.min(c, 3)}" class="${i === 0 ? "today" : ""}" title="${k}: ${c} ${c === 1 ? "entry" : "entries"}"></i>`);
+  }
+  $("#heat").innerHTML = cells.join("");
+}
+function renderPrompt() {
+  const base = Math.floor(Date.now() / 86400000);
+  const idx = (((base + state.promptOffset) % PROMPTS.length) + PROMPTS.length) % PROMPTS.length;
+  $("#prompt").textContent = PROMPTS[idx];
+  $("#prompt-num").textContent = state.promptOffset ? `Prompt ${idx + 1} of ${PROMPTS.length}` : "Today's prompt";
+}
+function renderPhrases() {
+  const withUse = state.phrases.map((p) => ({ ...p, uses: usesOf(p.phrase) }));
+  const pool = withUse.filter((p) => p.uses < 5).sort((a, b) => a.uses - b.uses || String(a.created_at).localeCompare(String(b.created_at)));
+  const potd = pool.length ? pool[Math.floor(Date.now() / 86400000) % Math.min(3, pool.length)] : null;
+  $("#potd").hidden = !potd;
+  if (potd) { $("#potd-p").textContent = potd.phrase; $("#potd-m").textContent = potd.meaning || ""; $("#potd-use").dataset.p = potd.phrase; }
+  const list = withUse.filter((p) => state.filter === "all" || levelOf(p.uses) === state.filter).sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)));
+  const label = { new: "New", prac: "Practicing", done: "Mastered" };
+  $("#plist").innerHTML = list.length ? list.map((p) => {
+    const lv = levelOf(p.uses);
+    return `<li><span class="ph">${esc(p.phrase)}</span>${speakBtn(p.phrase.replace(/…/g, ""))}
+      ${p.meaning ? `<span class="mean">${esc(p.meaning)}</span>` : ""}
+      <span class="meta"><span class="pill ${lv}">${label[lv]}</span><span class="dots" title="Used in ${p.uses} entries">${"●".repeat(Math.min(p.uses, 5))}${"○".repeat(Math.max(0, 5 - p.uses))}</span>
+      <span class="row-actions"><button type="button" class="ghost" data-practice="${esc(p.phrase)}">Practice</button><button type="button" class="ghost danger" data-delp="${esc(p.id)}">${state.confirmDel === "p:" + p.id ? "Confirm delete" : "Delete"}</button></span></span></li>`;
+  }).join("") : `<li class="empty" style="display:block">${state.phrases.length ? "No phrases in this group yet." : "Your phrase bank is empty. Add a phrase above."}</li>`;
+}
+function entryBody(e) {
+  const media = e.media || [];
+  const mediaBlock = `<div class="media">${media.map((m) => mediaHtml(m, `data-rmmedia="${esc(m.path)}" data-entry="${esc(e.id)}"`, state.confirmDel === "m:" + m.path)).join("")}${pendingHtml(e.id)}</div>`;
+  const addBar = `<div class="attach-bar">
+      <button class="btn small rec" type="button" data-rec="${esc(e.id)}">● Record voice</button>
+      <button class="btn small" type="button" data-pick="audio" data-for="${esc(e.id)}">+ Audio file</button>
+      <button class="btn small" type="button" data-pick="video" data-for="${esc(e.id)}">+ Video</button>
+      <button class="btn small" type="button" data-pick="image" data-for="${esc(e.id)}">+ Photo</button></div>`;
+  if (state.editing === e.id) {
+    return `<div class="edit-box">
+      <label for="edit-title-${esc(e.id)}">Title</label>
+      <input class="title-in" id="edit-title-${esc(e.id)}" value="${esc(e.title)}" placeholder="Title (optional)">
+      <label for="edit-body-${esc(e.id)}">Your writing</label>
+      <textarea class="notebook" id="edit-body-${esc(e.id)}">${esc(e.body)}</textarea>
+      <label for="edit-fb-${esc(e.id)}">Corrections &amp; notes (paste Claude's answer or your tutor's notes here)</label>
+      <textarea class="plain-area" id="edit-fb-${esc(e.id)}">${esc(e.feedback)}</textarea>
+      <div class="actions"><button type="button" class="btn primary small" data-saveedit="${esc(e.id)}">Save changes</button><button type="button" class="btn small" data-canceledit="1">Cancel</button></div>
+    </div>${mediaBlock}${addBar}`;
+  }
+  return `${e.body ? `<p class="fulltext">${esc(e.body)}</p>` : ""}
+    ${e.target ? `<p class="status">Practice phrase: <b>${esc(e.target)}</b></p>` : ""}
+    ${e.feedback ? `<div class="feedback"><span class="feedback-label">Corrections &amp; notes</span>${esc(e.feedback)}</div>` : ""}
+    ${mediaBlock}${addBar}
+    <div class="actions">${speakBtn(e.body, "Hear my text")}
+      ${e.body ? `<button type="button" class="ghost" data-ask="${esc(e.id)}">Ask Claude to correct</button>` : ""}
+      <button type="button" class="ghost" data-edit="${esc(e.id)}">${e.feedback ? "Edit" : "Edit / add corrections"}</button>
+      <button type="button" class="ghost danger" data-dele="${esc(e.id)}" style="margin-left:auto">${state.confirmDel === "e:" + e.id ? "Confirm delete" : "Delete entry"}</button></div>`;
+}
+let lastHistHtml = null;
+function setHist(html) {
+  if (html === lastHistHtml) return;
+  const id = state.editing, keep = {};
+  if (id) ["title", "body", "fb"].forEach((k) => { const el = document.getElementById(`edit-${k}-${id}`); if (el) keep[k] = el.value; });
+  $("#hlist").innerHTML = html; lastHistHtml = html;
+  if (id) Object.entries(keep).forEach(([k, v]) => { const el = document.getElementById(`edit-${k}-${id}`); if (el) el.value = v; });
+  updateRecButtons();
+}
+function renderHistory() {
+  const q = norm(state.query);
+  const list = state.entries.filter((e) => !q || norm(e.title).includes(q) || norm(e.body).includes(q) || norm(e.feedback).includes(q));
+  const shown = list.slice(0, state.shown);
+  $("#more").hidden = list.length <= state.shown;
+  if (!state.entries.length) { setHist(`<div class="empty">Nothing here yet. Write your first entry above. Everything you save shows up here, with your recordings and corrections, so you can look back and see how far you've come.</div>`); return; }
+  if (!shown.length) { setHist(`<div class="empty">No entries match “${esc(state.query)}”.</div>`); return; }
+  setHist(shown.map((e) => {
+    const d = new Date(e.created_at);
+    const when = d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: d.getFullYear() === new Date().getFullYear() ? undefined : "numeric" }) + " · " + d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+    const n = (e.media || []).length;
+    const preview = e.body ? (e.body.length > 160 ? e.body.slice(0, 160) + "…" : e.body) : "";
+    const tag = e.feedback ? '<span class="tag fb">corrected</span>' : '<span class="tag">note</span>';
+    return `<details class="entry" data-id="${esc(e.id)}"${state.open.has(e.id) || state.editing === e.id ? " open" : ""}><summary><span class="edate">${esc(when)}</span><span class="etext">${e.title ? `<span class="etitle">${esc(e.title)}</span>` : ""}${esc(preview)}${n ? `<span class="mcount">· ${n} ${n === 1 ? "file" : "files"}</span>` : ""}</span>${tag}</summary>
+      <div class="ebody">${entryBody(e)}</div></details>`;
+  }).join(""));
+}
+function renderAll() { renderStats(); renderPhrases(); renderHistory(); renderDraftMedia(); updateRecButtons(); }
+
+/* ---------- Events ---------- */
+$("#save").addEventListener("click", () => saveDraftEntry(false));
+$("#save-ask").addEventListener("click", () => saveDraftEntry(true));
+$("#next-prompt").addEventListener("click", () => { state.promptOffset++; renderPrompt(); });
+$("#clear-target").addEventListener("click", () => setTarget(""));
+$("#potd-use").addEventListener("click", (ev) => { setTarget(ev.currentTarget.dataset.p); $("#draft").focus(); });
+$("#draft").addEventListener("input", () => { updateWordCount(); saveDraft(); });
+$("#draft-title").addEventListener("input", saveDraft);
+$("#search").addEventListener("input", (ev) => { state.query = ev.target.value; state.shown = 20; renderHistory(); });
+$("#more").addEventListener("click", () => { state.shown += 20; renderHistory(); });
+$("#add-form").addEventListener("submit", async (ev) => {
+  ev.preventDefault();
+  const phrase = $("#add-phrase").value.trim(), meaning = $("#add-meaning").value.trim();
+  if (!phrase || state.phrases.some((p) => norm(p.phrase) === norm(phrase))) { $("#add-phrase").value = ""; return; }
+  const { data, error } = await sb.from("phrases").insert({ phrase, meaning }).select().single();
+  if (error) { setStatus("Couldn't add the phrase. Check your internet connection.", true); return; }
+  state.phrases.push(data);
+  $("#add-phrase").value = ""; $("#add-meaning").value = "";
+  renderAll();
+});
+document.querySelectorAll(".filter").forEach((b) => b.addEventListener("click", () => {
+  state.filter = b.dataset.filter;
+  document.querySelectorAll(".filter").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+  renderPhrases();
+}));
+document.addEventListener("toggle", (ev) => {
+  const d = ev.target;
+  if (!d.matches || !d.matches("details.entry")) return;
+  if (d.open) state.open.add(d.dataset.id); else state.open.delete(d.dataset.id);
+}, true);
+function confirmStep(key, btn, label) {
+  if (state.confirmDel === key) { state.confirmDel = null; return true; }
+  state.confirmDel = key; btn.textContent = label;
+  setTimeout(() => { if (state.confirmDel === key) { state.confirmDel = null; renderPhrases(); renderHistory(); } }, 4000);
+  return false;
+}
+document.addEventListener("click", async (ev) => {
+  const t = ev.target.closest("button");
+  if (!t || $("#app").hidden) return;
+  const d = t.dataset;
+  if (d.speak) { ev.preventDefault(); speak(d.speak); return; }
+  if (d.practice) { setTarget(d.practice); $("#draft").focus(); return; }
+  if (d.pick) { pickFiles(d.pick, d.for); return; }
+  if (d.rec) { if (state.rec && state.rec.target === d.rec) stopRecording(false); else startRecording(d.rec); return; }
+  if (d.ask) { const e = state.entries.find((x) => x.id === d.ask); if (e) openClaude(e.body, e.target); return; }
+  if (d.rmdraft) {
+    state.draftMedia = state.draftMedia.filter((m) => m.path !== d.rmdraft); saveDraft(); renderDraftMedia();
+    removeFiles([d.rmdraft]);
+    return;
+  }
+  if (d.edit) { state.editing = d.edit; state.open.add(d.edit); renderHistory(); const x = document.getElementById("edit-body-" + d.edit); if (x) x.focus(); return; }
+  if (d.canceledit) { state.editing = null; renderHistory(); return; }
+  if (d.saveedit) {
+    const id = d.saveedit;
+    const patch = {
+      title: document.getElementById("edit-title-" + id).value.trim(),
+      body: document.getElementById("edit-body-" + id).value.trim(),
+      feedback: document.getElementById("edit-fb-" + id).value.trim()
+    };
+    t.disabled = true; t.textContent = "Saving…";
+    try { await updateEntry(id, patch); state.editing = null; renderAll(); }
+    catch { t.disabled = false; t.textContent = "Couldn't save. Try again"; }
+    return;
+  }
+  if (d.rmmedia) {
+    if (!confirmStep("m:" + d.rmmedia, t, "Confirm remove")) return;
+    const eid = d.entry, path = d.rmmedia;
+    try {
+      await queueFor(eid, async () => {
+        const e = state.entries.find((x) => x.id === eid);
+        if (e) await updateEntry(eid, { media: (e.media || []).filter((m) => m.path !== path) });
+      });
+      await removeFiles([path]);
+    } catch {}
+    renderAll(); return;
+  }
+  if (d.dele) {
+    if (!confirmStep("e:" + d.dele, t, "Confirm delete")) return;
+    const e = state.entries.find((x) => x.id === d.dele);
+    const { error } = await sb.from("entries").delete().eq("id", d.dele);
+    if (!error) {
+      state.entries = state.entries.filter((x) => x.id !== d.dele);
+      if (e) await removeFiles((e.media || []).map((m) => m.path));
+    }
+    renderAll(); return;
+  }
+  if (d.delp) {
+    if (!confirmStep("p:" + d.delp, t, "Confirm delete")) return;
+    const { error } = await sb.from("phrases").delete().eq("id", d.delp);
+    if (!error) state.phrases = state.phrases.filter((x) => x.id !== d.delp);
+    renderAll(); return;
+  }
+});
+// Signed links to recordings expire after a few hours; refresh them when you come back to the tab.
+document.addEventListener("visibilitychange", async () => {
+  if (document.visibilityState === "visible" && state.uid) {
+    const before = JSON.stringify(Object.keys(state.urls).map((k) => state.urls[k].url));
+    await refreshUrls();
+    if (JSON.stringify(Object.keys(state.urls).map((k) => state.urls[k].url)) !== before) renderAll();
+  }
+});
+
+/* ---------- Boot ---------- */
+(async () => {
+  if (!configured) { show("setup"); return; }
+  if (!sb) { show("setup"); $("#setup .lock-card p:last-child").textContent = "Couldn't load the sign-in system. Check your internet connection and reload the page."; return; }
+  const { data } = await sb.auth.getSession();
+  if (data && data.session) start(data.session.user); else showLogin();
+  sb.auth.onAuthStateChange((event) => { if (event === "SIGNED_OUT" && state.uid) showLogin(); });
+})();
+</script>
+</body>
+</html>
