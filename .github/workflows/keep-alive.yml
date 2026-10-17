@@ -1,0 +1,38 @@
+# Keeps the free Supabase project from pausing (it pauses after 7 days without use).
+# GitHub runs this every 3 days and asks the database one tiny question.
+# On the 1st of each month it also saves a small date file, because GitHub turns off
+# scheduled helpers in repositories that have had no changes for 60 days.
+name: Keep Supabase awake
+
+on:
+  schedule:
+    - cron: "17 6 */3 * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping the database
+        run: |
+          curl -fsS -o /dev/null \
+            -H "apikey: sb_publishable_N41Vum4LgioxY1pLbDZbNg_1AxQ51tc" \
+            "https://eezjqjqckmyepjlwdpup.supabase.co/rest/v1/phrases?select=id&limit=1"
+          echo "Supabase is awake"
+
+      - uses: actions/checkout@v4
+
+      - name: Monthly heartbeat (keeps this helper switched on)
+        run: |
+          if [ "$(date -u +%d)" = "01" ] || [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            date -u > .github/last-heartbeat.txt
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add .github/last-heartbeat.txt
+            git commit -m "Monthly heartbeat" && git push
+          else
+            echo "Not the 1st of the month; nothing to save."
+          fi
